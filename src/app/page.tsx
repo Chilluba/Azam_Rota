@@ -1,5 +1,6 @@
 import { SchedulerPage } from '@/components/scheduler-page';
-import { Users, Clock, Download } from 'lucide-react';
+import { Users, Clock, Download, Sun, Moon } from 'lucide-react';
+import { ThemeToggle } from '@/components/theme-toggle';
 
 export default function Home() {
   return (
@@ -8,7 +9,7 @@ export default function Home() {
         <div className="container flex h-16 items-center space-x-4 sm:justify-between sm:space-x-0">
           <div className="flex gap-3 items-center">
             <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary">
-              <div className="flex items-center justify-center w-6 h-6 rounded-md bg-white">
+              <div className="flex items-center justify-center w-6 h-6 rounded-md bg-white dark:bg-zinc-900">
                  <div className="w-3 h-3 rounded-sm bg-destructive"></div>
               </div>
             </div>
@@ -27,6 +28,7 @@ export default function Home() {
               <Download className="w-4 h-4" />
               <span>Excel Export</span>
             </div>
+             <ThemeToggle />
           </div>
         </div>
       </header>
