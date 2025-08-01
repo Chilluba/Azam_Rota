@@ -21,6 +21,7 @@ import { TimeSlot, exportToExcel } from '@/lib/excel';
 import { cn } from '@/lib/utils';
 import { Users, Clock, Trash2, Download, ChevronsUpDown, Check, X, UserX, UserCheck, RotateCw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useLanguage } from '@/lib/i18n';
 
 const formSchema = z.object({
   employees: z.string().min(1, 'Please enter at least one employee.'),
@@ -37,6 +38,7 @@ type FormValues = z.infer<typeof formSchema>;
 export function SchedulerPage() {
   const [schedule, setSchedule] = useState<Group[] | null>(null);
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -83,14 +85,17 @@ export function SchedulerPage() {
       const newSchedule = generateSchedule(employees, data.numGroups, data.unavailableEmployees);
       setSchedule(newSchedule);
       toast({
-          title: "Schedule Generated",
-          description: `Successfully scheduled ${employees.length - data.unavailableEmployees.length} employees into ${data.numGroups} groups.`,
+          title: t('toast.scheduleGenerated.title'),
+          description: t('toast.scheduleGenerated.description', { 
+            employeeCount: employees.length - data.unavailableEmployees.length,
+            groupCount: data.numGroups 
+          }),
       });
     } catch (error) {
        toast({
         variant: "destructive",
-        title: "Generation Failed",
-        description: error instanceof Error ? error.message : "An unknown error occurred.",
+        title: t('toast.generationFailed.title'),
+        description: error instanceof Error ? error.message : t('toast.generationFailed.unknownError'),
       });
     }
   };
@@ -99,13 +104,13 @@ export function SchedulerPage() {
     if (!schedule) {
         toast({
             variant: "destructive",
-            title: "Export Failed",
-            description: "Please generate a schedule before exporting.",
+            title: t('toast.exportFailed.title'),
+            description: t('toast.exportFailed.description'),
         });
         return;
     };
     const timeSlots = form.getValues('timeSlots');
-    exportToExcel(schedule, timeSlots);
+    exportToExcel(schedule, timeSlots, t);
   };
   
   const handleMoveEmployee = (employeeName: string, fromGroupId: number, toGroupId: number) => {
@@ -121,12 +126,11 @@ export function SchedulerPage() {
         toGroup.employees.push(employeeName);
         setSchedule(newSchedule);
         toast({
-            title: "Employee Moved",
-            description: `${employeeName} moved from Group ${fromGroupId} to Group ${toGroupId}.`,
+            title: t('toast.employeeMoved.title'),
+            description: t('toast.employeeMoved.description', { employeeName, fromGroupId, toGroupId }),
         });
     }
   };
-
 
   return (
     <div className="container mx-auto p-4 md:p-8">
@@ -135,31 +139,31 @@ export function SchedulerPage() {
           
           <Card className="lg:col-span-2 h-fit sticky top-24 shadow-lg">
             <CardHeader>
-              <CardTitle className="font-headline text-2xl flex items-center gap-2"><Users className="w-6 h-6 text-primary"/>Configuration</CardTitle>
-              <CardDescription>Set up the details for the daily schedule.</CardDescription>
+              <CardTitle className="font-headline text-2xl flex items-center gap-2"><Users className="w-6 h-6 text-primary"/>{t('config.title')}</CardTitle>
+              <CardDescription>{t('config.description')}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="employees" className="font-semibold">Employee Names/IDs</Label>
+                <Label htmlFor="employees" className="font-semibold">{t('config.employeeNames')}</Label>
                 <Textarea
                   id="employees"
-                  placeholder="Enter each employee on a new line..."
+                  placeholder={t('config.employeePlaceholder')}
                   {...form.register('employees')}
                   className="h-40 text-sm"
                 />
-                {form.formState.errors.employees && <p className="text-sm text-destructive">{form.formState.errors.employees.message}</p>}
+                {form.formState.errors.employees && <p className="text-sm text-destructive">{t(form.formState.errors.employees.message as any)}</p>}
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                  <div className="space-y-2">
-                  <Label htmlFor="numGroups" className="font-semibold">Number of Groups</Label>
+                  <Label htmlFor="numGroups" className="font-semibold">{t('config.numGroups')}</Label>
                   <Controller
                       control={form.control}
                       name="numGroups"
                       render={({ field }) => (
                           <Select onValueChange={(val) => field.onChange(Number(val))} defaultValue={String(field.value)}>
                               <SelectTrigger>
-                                  <SelectValue placeholder="Select number of groups" />
+                                  <SelectValue placeholder={t('config.selectNumGroups')} />
                               </SelectTrigger>
                               <SelectContent>
                                   {[...Array(9)].map((_, i) => <SelectItem key={i+2} value={String(i+2)}>{i + 2}</SelectItem>)}
@@ -170,7 +174,7 @@ export function SchedulerPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="font-semibold">Unavailable Employees</Label>
+                  <Label className="font-semibold">{t('config.unavailableEmployees')}</Label>
                    <Controller
                       name="unavailableEmployees"
                       control={form.control}
@@ -179,16 +183,16 @@ export function SchedulerPage() {
                           <PopoverTrigger asChild>
                             <Button variant="outline" role="combobox" className="w-full justify-between font-normal">
                               <span className="truncate">
-                                {field.value.length > 0 ? `${field.value.length} selected` : "Select unavailable..."}
+                                {field.value.length > 0 ? t('config.selectedUnavailable', { count: field.value.length }) : t('config.selectUnavailable')}
                               </span>
                               <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                             </Button>
                           </PopoverTrigger>
                           <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
                             <Command>
-                              <CommandInput placeholder="Search employees..." />
+                              <CommandInput placeholder={t('config.searchEmployees')} />
                               <CommandList>
-                                <CommandEmpty>No employees found.</CommandEmpty>
+                                <CommandEmpty>{t('config.noEmployeesFound')}</CommandEmpty>
                                 <CommandGroup>
                                   {allEmployees.map((employee) => (
                                     <CommandItem
@@ -218,23 +222,23 @@ export function SchedulerPage() {
               <Separator/>
 
               <div className="space-y-4">
-                <h3 className="text-md font-semibold font-headline">Group Time Slots</h3>
+                <h3 className="text-md font-semibold font-headline">{t('config.timeSlots')}</h3>
                 {fields.map((field, index) => (
                   <div key={field.id} className="flex items-center gap-2">
-                    <Label className="w-24 text-sm text-muted-foreground">Group {index + 1}</Label>
+                    <Label className="w-24 text-sm text-muted-foreground">{t('config.group', {id: index + 1})}</Label>
                     <Input type="time" {...form.register(`timeSlots.${index}.start`)} className="text-sm"/>
                     <span className="text-muted-foreground">-</span>
                     <Input type="time" {...form.register(`timeSlots.${index}.end`)} className="text-sm"/>
                   </div>
                 ))}
-                {form.formState.errors.timeSlots && <p className="text-sm text-destructive">Please ensure all times are in HH:MM format.</p>}
+                {form.formState.errors.timeSlots && <p className="text-sm text-destructive">{t('config.timeSlotError')}</p>}
               </div>
 
             </CardContent>
             <CardFooter>
                <Button type="submit" className="w-full font-bold text-lg py-6">
                   <RotateCw className="mr-2 h-5 w-5" />
-                  Generate Daily Rotation
+                  {t('config.generateButton')}
                 </Button>
             </CardFooter>
           </Card>
@@ -245,10 +249,10 @@ export function SchedulerPage() {
                     <CardHeader>
                         <div className="flex justify-between items-start">
                             <div>
-                                <CardTitle className="font-headline text-2xl flex items-center gap-2"><Clock className="w-6 h-6 text-primary"/>Generated Schedule</CardTitle>
-                                <CardDescription>Review the groups below. You can manually move employees if needed.</CardDescription>
+                                <CardTitle className="font-headline text-2xl flex items-center gap-2"><Clock className="w-6 h-6 text-primary"/>{t('schedule.title')}</CardTitle>
+                                <CardDescription>{t('schedule.description')}</CardDescription>
                             </div>
-                            <Button variant="outline" onClick={handleExport}><Download className="mr-2 h-4 w-4"/>Export to Excel</Button>
+                            <Button variant="outline" onClick={handleExport}><Download className="mr-2 h-4 w-4"/>{t('schedule.exportButton')}</Button>
                         </div>
                     </CardHeader>
                     <CardContent className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
@@ -263,7 +267,7 @@ export function SchedulerPage() {
                                 >
                                     <Card className="flex flex-col h-full overflow-hidden">
                                         <CardHeader className="bg-muted/50 p-4">
-                                            <CardTitle className="font-headline text-lg">Group {group.id}</CardTitle>
+                                            <CardTitle className="font-headline text-lg">{t('schedule.group', { id: group.id })}</CardTitle>
                                             <CardDescription className="text-primary font-bold text-sm">
                                                 {form.getValues(`timeSlots.${index}.start`)} - {form.getValues(`timeSlots.${index}.end`)}
                                             </CardDescription>
@@ -278,13 +282,13 @@ export function SchedulerPage() {
                                                             <SelectValue/>
                                                           </SelectTrigger>
                                                           <SelectContent>
-                                                            {schedule.map(g => <SelectItem key={g.id} value={String(g.id)}>Group {g.id}</SelectItem>)}
+                                                            {schedule.map(g => <SelectItem key={g.id} value={String(g.id)}>{t('schedule.group', { id: g.id })}</SelectItem>)}
                                                           </SelectContent>
                                                         </Select>
                                                     </div>
                                                 ))
                                             ) : (
-                                                <p className="text-sm text-muted-foreground text-center pt-4">No employees assigned.</p>
+                                                <p className="text-sm text-muted-foreground text-center pt-4">{t('schedule.noEmployees')}</p>
                                             )}
                                         </CardContent>
                                     </Card>
@@ -298,20 +302,20 @@ export function SchedulerPage() {
                     <div className="p-4 bg-primary/10 rounded-full mb-4">
                         <Users className="w-12 h-12 text-primary"/>
                     </div>
-                    <h3 className="text-2xl font-headline font-semibold">Your schedule will appear here</h3>
+                    <h3 className="text-2xl font-headline font-semibold">{t('placeholder.title')}</h3>
                     <p className="text-muted-foreground mt-2 max-w-md">
-                        Fill in the configuration details on the left and click 'Generate Daily Rotation' to create a fair and balanced schedule.
+                        {t('placeholder.description')}
                     </p>
                 </div>
             )}
             
             <Card className="shadow-lg">
                 <CardHeader>
-                    <CardTitle className="font-headline text-2xl flex items-center gap-2"><UserX className="w-6 h-6 text-destructive"/>Unavailable Employees</CardTitle>
+                    <CardTitle className="font-headline text-2xl flex items-center gap-2"><UserX className="w-6 h-6 text-destructive"/>{t('unavailable.title')}</CardTitle>
                     <CardDescription>
                         {form.watch('unavailableEmployees').length > 0 
-                            ? "These employees are excluded from the current rotation." 
-                            : "No employees are marked as unavailable."}
+                            ? t('unavailable.description_some')
+                            : t('unavailable.description_none')}
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -327,7 +331,7 @@ export function SchedulerPage() {
                         ))}
                         </div>
                     ) : (
-                        <p className="text-sm text-muted-foreground">Select employees in the configuration panel to mark them as unavailable.</p>
+                        <p className="text-sm text-muted-foreground">{t('unavailable.select_in_config')}</p>
                     )}
                 </CardContent>
             </Card>

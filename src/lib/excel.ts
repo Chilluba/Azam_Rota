@@ -2,6 +2,7 @@
 "use client"
 import * as XLSX from 'xlsx';
 import type { Group } from './scheduler';
+import { TranslationFunction } from './i18n';
 
 export interface TimeSlot {
   start: string;
@@ -17,7 +18,7 @@ const formatTime = (time: string) => {
 };
 
 
-export const exportToExcel = (schedule: Group[], timeSlots: TimeSlot[]) => {
+export const exportToExcel = (schedule: Group[], timeSlots: TimeSlot[], t: TranslationFunction) => {
   const wb = XLSX.utils.book_new();
   const ws_data: any[][] = [];
 
@@ -103,7 +104,7 @@ export const exportToExcel = (schedule: Group[], timeSlots: TimeSlot[]) => {
   ws['!merges'] = merges;
   ws['!cols'] = [{ wch: 30 }, { wch: 30 }];
 
-  XLSX.utils.book_append_sheet(wb, ws, 'Schedule');
+  XLSX.utils.book_append_sheet(wb, ws, t('excel.sheetName'));
   const today = new Date().toISOString().slice(0, 10);
   XLSX.writeFile(wb, `AzamRota_Schedule_${today}.xlsx`);
 };

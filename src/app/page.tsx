@@ -1,8 +1,12 @@
+"use client"
 import { SchedulerPage } from '@/components/scheduler-page';
 import { Users, Clock, Download, Sun, Moon } from 'lucide-react';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { useLanguage } from '@/lib/i18n';
+import LanguageSwitcher from '@/components/language-switcher';
 
 export default function Home() {
+  const { t } = useLanguage();
   return (
     <div className="flex flex-col min-h-screen bg-background font-sans">
       <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur-sm">
@@ -18,16 +22,17 @@ export default function Home() {
           <div className="flex items-center gap-4 text-sm text-muted-foreground font-sans">
              <div className="hidden md:flex items-center gap-1.5">
               <Users className="w-4 h-4" />
-              <span>Fair Rotation Scheduling</span>
+              <span>{t('header.fairRotation')}</span>
             </div>
              <div className="hidden lg:flex items-center gap-1.5">
               <Clock className="w-4 h-4" />
-              <span>Time-Slot Management</span>
+              <span>{t('header.timeSlotManagement')}</span>
             </div>
              <div className="hidden lg:flex items-center gap-1.5">
               <Download className="w-4 h-4" />
-              <span>Excel Export</span>
+              <span>{t('header.excelExport')}</span>
             </div>
+             <LanguageSwitcher />
              <ThemeToggle />
           </div>
         </div>
@@ -40,7 +45,7 @@ export default function Home() {
       <footer className="py-6 md:px-8 md:py-0 bg-secondary/50">
         <div className="container flex flex-col items-center justify-center gap-4 h-24">
           <p className="text-center text-sm leading-loose text-muted-foreground">
-            Built to streamline daily break scheduling with fairness and efficiency.
+            {t('footer.builtToStreamline')}
           </p>
         </div>
       </footer>
