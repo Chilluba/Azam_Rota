@@ -61,7 +61,7 @@ export function SchedulerPage() {
   const employeeStr = form.watch('employees');
   
   const allEmployees = useMemo(() => {
-    return Array.from(new Set(employeeStr.split('\n').map(e => e.trim()).filter(Boolean)));
+    return Array.from(new Set(employeeStr.split('\n').map(e => e.trim()).filter(Boolean))).sort();
   }, [employeeStr]);
   
   useEffect(() => {
@@ -78,13 +78,21 @@ export function SchedulerPage() {
   }, [numGroups, append, remove, form]);
 
   const onSubmit = (data: FormValues) => {
-    const employees = Array.from(new Set(data.employees.split('\n').map(e => e.trim()).filter(Boolean)));
-    const newSchedule = generateSchedule(employees, data.numGroups, data.unavailableEmployees);
-    setSchedule(newSchedule);
-    toast({
-        title: "Schedule Generated",
-        description: `Successfully scheduled ${employees.length - data.unavailableEmployees.length} employees into ${data.numGroups} groups.`,
-    });
+    try {
+      const employees = Array.from(new Set(data.employees.split('\n').map(e => e.trim()).filter(Boolean)));
+      const newSchedule = generateSchedule(employees, data.numGroups, data.unavailableEmployees);
+      setSchedule(newSchedule);
+      toast({
+          title: "Schedule Generated",
+          description: `Successfully scheduled ${employees.length - data.unavailableEmployees.length} employees into ${data.numGroups} groups.`,
+      });
+    } catch (error) {
+       toast({
+        variant: "destructive",
+        title: "Generation Failed",
+        description: error instanceof Error ? error.message : "An unknown error occurred.",
+      });
+    }
   };
 
   const handleExport = () => {
@@ -112,35 +120,39 @@ export function SchedulerPage() {
         fromGroup.employees = fromGroup.employees.filter(e => e !== employeeName);
         toGroup.employees.push(employeeName);
         setSchedule(newSchedule);
+        toast({
+            title: "Employee Moved",
+            description: `${employeeName} moved from Group ${fromGroupId} to Group ${toGroupId}.`,
+        });
     }
   };
 
 
   return (
-    <div className="container py-8">
+    <div className="container mx-auto p-4 md:p-8">
       <form onSubmit={form.handleSubmit(onSubmit)}>
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-start">
           
-          <Card className="lg:col-span-2 h-fit sticky top-20">
+          <Card className="lg:col-span-2 h-fit sticky top-24 shadow-lg">
             <CardHeader>
-              <CardTitle className="font-headline flex items-center gap-2"><Users className="w-6 h-6 text-primary"/>Configuration</CardTitle>
+              <CardTitle className="font-headline text-2xl flex items-center gap-2"><Users className="w-6 h-6 text-primary"/>Configuration</CardTitle>
               <CardDescription>Set up the details for the daily schedule.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="employees">Employee Names/IDs</Label>
+                <Label htmlFor="employees" className="font-semibold">Employee Names/IDs</Label>
                 <Textarea
                   id="employees"
                   placeholder="Enter each employee on a new line..."
                   {...form.register('employees')}
-                  className="h-40"
+                  className="h-40 text-sm"
                 />
                 {form.formState.errors.employees && <p className="text-sm text-destructive">{form.formState.errors.employees.message}</p>}
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                  <div className="space-y-2">
-                  <Label htmlFor="numGroups">Number of Groups</Label>
+                  <Label htmlFor="numGroups" className="font-semibold">Number of Groups</Label>
                   <Controller
                       control={form.control}
                       name="numGroups"
@@ -158,14 +170,14 @@ export function SchedulerPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Unavailable Employees</Label>
+                  <Label className="font-semibold">Unavailable Employees</Label>
                    <Controller
                       name="unavailableEmployees"
                       control={form.control}
                       render={({ field }) => (
                         <Popover>
                           <PopoverTrigger asChild>
-                            <Button variant="outline" role="combobox" className="w-full justify-between">
+                            <Button variant="outline" role="combobox" className="w-full justify-between font-normal">
                               <span className="truncate">
                                 {field.value.length > 0 ? `${field.value.length} selected` : "Select unavailable..."}
                               </span>
@@ -206,13 +218,13 @@ export function SchedulerPage() {
               <Separator/>
 
               <div className="space-y-4">
-                <h3 className="text-md font-medium font-headline">Group Time Slots</h3>
+                <h3 className="text-md font-semibold font-headline">Group Time Slots</h3>
                 {fields.map((field, index) => (
                   <div key={field.id} className="flex items-center gap-2">
-                    <Label className="w-20">Group {index + 1}</Label>
-                    <Input type="time" {...form.register(`timeSlots.${index}.start`)} />
+                    <Label className="w-24 text-sm text-muted-foreground">Group {index + 1}</Label>
+                    <Input type="time" {...form.register(`timeSlots.${index}.start`)} className="text-sm"/>
                     <span className="text-muted-foreground">-</span>
-                    <Input type="time" {...form.register(`timeSlots.${index}.end`)} />
+                    <Input type="time" {...form.register(`timeSlots.${index}.end`)} className="text-sm"/>
                   </div>
                 ))}
                 {form.formState.errors.timeSlots && <p className="text-sm text-destructive">Please ensure all times are in HH:MM format.</p>}
@@ -220,20 +232,20 @@ export function SchedulerPage() {
 
             </CardContent>
             <CardFooter>
-               <Button type="submit" className="w-full">
-                  <RotateCw className="mr-2 h-4 w-4" />
+               <Button type="submit" className="w-full font-bold text-lg py-6">
+                  <RotateCw className="mr-2 h-5 w-5" />
                   Generate Daily Rotation
                 </Button>
             </CardFooter>
           </Card>
 
-          <div className="lg:col-span-3">
+          <div className="lg:col-span-3 space-y-8">
              {schedule ? (
-                <Card>
+                <Card className="shadow-lg">
                     <CardHeader>
                         <div className="flex justify-between items-start">
                             <div>
-                                <CardTitle className="font-headline flex items-center gap-2"><Clock className="w-6 h-6 text-primary"/>Generated Schedule</CardTitle>
+                                <CardTitle className="font-headline text-2xl flex items-center gap-2"><Clock className="w-6 h-6 text-primary"/>Generated Schedule</CardTitle>
                                 <CardDescription>Review the groups below. You can manually move employees if needed.</CardDescription>
                             </div>
                             <Button variant="outline" onClick={handleExport}><Download className="mr-2 h-4 w-4"/>Export to Excel</Button>
@@ -249,20 +261,20 @@ export function SchedulerPage() {
                                     exit={{ opacity: 0, y: -20 }}
                                     transition={{ duration: 0.3, delay: index * 0.1 }}
                                 >
-                                    <Card className="flex flex-col h-full">
-                                        <CardHeader className="bg-muted/50">
-                                            <CardTitle className="font-headline text-base">Group {group.id}</CardTitle>
-                                            <CardDescription className="text-primary font-semibold">
+                                    <Card className="flex flex-col h-full overflow-hidden">
+                                        <CardHeader className="bg-muted/50 p-4">
+                                            <CardTitle className="font-headline text-lg">Group {group.id}</CardTitle>
+                                            <CardDescription className="text-primary font-bold text-sm">
                                                 {form.getValues(`timeSlots.${index}.start`)} - {form.getValues(`timeSlots.${index}.end`)}
                                             </CardDescription>
                                         </CardHeader>
                                         <CardContent className="p-4 space-y-2 flex-1">
                                             {group.employees.length > 0 ? (
                                                 group.employees.sort().map(employee => (
-                                                    <div key={employee} className="flex items-center justify-between text-sm">
-                                                        <span>{employee}</span>
+                                                    <div key={employee} className="flex items-center justify-between text-sm p-2 rounded-md hover:bg-muted/50 transition-colors">
+                                                        <span className="font-medium">{employee}</span>
                                                         <Select onValueChange={(val) => handleMoveEmployee(employee, group.id, Number(val))} defaultValue={String(group.id)}>
-                                                          <SelectTrigger className="w-24 h-8 text-xs">
+                                                          <SelectTrigger className="w-28 h-8 text-xs">
                                                             <SelectValue/>
                                                           </SelectTrigger>
                                                           <SelectContent>
@@ -272,7 +284,7 @@ export function SchedulerPage() {
                                                     </div>
                                                 ))
                                             ) : (
-                                                <p className="text-sm text-muted-foreground text-center pt-4">No employees in this group.</p>
+                                                <p className="text-sm text-muted-foreground text-center pt-4">No employees assigned.</p>
                                             )}
                                         </CardContent>
                                     </Card>
@@ -282,20 +294,20 @@ export function SchedulerPage() {
                     </CardContent>
                 </Card>
             ) : (
-                <div className="flex flex-col items-center justify-center text-center p-8 border-2 border-dashed rounded-lg h-full">
+                <div className="flex flex-col items-center justify-center text-center p-8 border-2 border-dashed rounded-lg h-full min-h-[400px]">
                     <div className="p-4 bg-primary/10 rounded-full mb-4">
                         <Users className="w-12 h-12 text-primary"/>
                     </div>
-                    <h3 className="text-xl font-headline font-semibold">Your schedule will appear here</h3>
+                    <h3 className="text-2xl font-headline font-semibold">Your schedule will appear here</h3>
                     <p className="text-muted-foreground mt-2 max-w-md">
-                        Fill in the configuration details on the left and click 'Generate Schedule' to see the magic happen.
+                        Fill in the configuration details on the left and click 'Generate Daily Rotation' to create a fair and balanced schedule.
                     </p>
                 </div>
             )}
             
-            <Card className="mt-8">
+            <Card className="shadow-lg">
                 <CardHeader>
-                    <CardTitle className="font-headline flex items-center gap-2"><UserX className="w-6 h-6 text-destructive"/>Unavailable Employees</CardTitle>
+                    <CardTitle className="font-headline text-2xl flex items-center gap-2"><UserX className="w-6 h-6 text-destructive"/>Unavailable Employees</CardTitle>
                     <CardDescription>
                         {form.watch('unavailableEmployees').length > 0 
                             ? "These employees are excluded from the current rotation." 
@@ -306,10 +318,10 @@ export function SchedulerPage() {
                     {form.watch('unavailableEmployees').length > 0 ? (
                         <div className="flex flex-wrap gap-2">
                         {form.watch('unavailableEmployees').map(emp => (
-                            <span key={emp} className="flex items-center gap-1.5 bg-muted text-muted-foreground px-2 py-1 rounded-md text-sm">
+                            <span key={emp} className="flex items-center gap-1.5 bg-muted text-muted-foreground px-3 py-1.5 rounded-full text-sm font-medium">
                                 {emp}
-                                <button onClick={() => form.setValue('unavailableEmployees', form.getValues('unavailableEmployees').filter(e => e !== emp))}>
-                                    <X className="w-3 h-3"/>
+                                <button type="button" onClick={() => form.setValue('unavailableEmployees', form.getValues('unavailableEmployees').filter(e => e !== emp))} className="text-muted-foreground hover:text-destructive transition-colors">
+                                    <X className="w-4 h-4"/>
                                 </button>
                             </span>
                         ))}
@@ -326,5 +338,3 @@ export function SchedulerPage() {
     </div>
   );
 }
-
-    
