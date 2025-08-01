@@ -19,7 +19,7 @@ import { Separator } from '@/components/ui/separator';
 import { Group, generateSchedule } from '@/lib/scheduler';
 import { TimeSlot, exportToExcel } from '@/lib/excel';
 import { cn } from '@/lib/utils';
-import { Users, Clock, Trash2, Download, ChevronsUpDown, Check, X, UserX, UserCheck } from 'lucide-react';
+import { Users, Clock, Trash2, Download, ChevronsUpDown, Check, X, UserX, UserCheck, RotateCw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 const formSchema = z.object({
@@ -220,7 +220,10 @@ export function SchedulerPage() {
 
             </CardContent>
             <CardFooter>
-               <Button type="submit" className="w-full">Generate Schedule</Button>
+               <Button type="submit" className="w-full">
+                  <RotateCw className="mr-2 h-4 w-4" />
+                  Generate Daily Rotation
+                </Button>
             </CardFooter>
           </Card>
 
@@ -323,3 +326,5 @@ export function SchedulerPage() {
     </div>
   );
 }
+
+    
