@@ -1,3 +1,4 @@
+
 "use client"
 import * as XLSX from 'xlsx';
 import type { Group } from './scheduler';
@@ -7,39 +8,102 @@ export interface TimeSlot {
   end: string;
 }
 
+const formatTime = (time: string) => {
+    if (!time || !/^\d{2}:\d{2}$/.test(time)) return '';
+    const [hour, minute] = time.split(':').map(Number);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const hour12 = hour % 12 || 12;
+    return `${hour12}:${minute.toString().padStart(2, '0')}${ampm}`;
+};
+
+
 export const exportToExcel = (schedule: Group[], timeSlots: TimeSlot[]) => {
-  const worksheetData = schedule.flatMap(group => {
+  const wb = XLSX.utils.book_new();
+  const ws_data: any[][] = [];
+
+  schedule.forEach((group, index) => {
+    if (ws_data.length > 0) {
+      ws_data.push([]); // Add an empty row between groups
+    }
     const timeSlot = timeSlots[group.id - 1] || { start: 'N/A', end: 'N/A' };
-    return group.employees.map(employee => ({
-      'Employee Name/ID': employee,
-      'Group Number': group.id,
-      'Break Start Time': timeSlot.start,
-      'Break End Time': timeSlot.end,
-    }));
+    const headerText = `${formatTime(timeSlot.start)} - ${formatTime(timeSlot.end)}`;
+    ws_data.push([headerText, null]);
+
+    const midIndex = Math.ceil(group.employees.length / 2);
+    const col1 = group.employees.slice(0, midIndex);
+    const col2 = group.employees.slice(midIndex);
+
+    const maxRows = Math.max(col1.length, col2.length);
+
+    for (let i = 0; i < maxRows; i++) {
+      ws_data.push([
+        col1[i] || null,
+        col2[i] || null
+      ]);
+    }
   });
 
-  if (worksheetData.length === 0) {
-    // Add a placeholder row if there's no data to export
-    worksheetData.push({
-      'Employee Name/ID': 'No employees scheduled',
-      'Group Number': '',
-      'Break Start Time': '',
-      'Break End Time': '',
-    });
+  const ws = XLSX.utils.aoa_to_sheet(ws_data);
+
+  // Styling and Merging
+  const merges = [];
+  let currentRow = 0;
+  for (let i = 0; i < schedule.length; i++) {
+    if (i > 0) {
+      currentRow++; // Account for empty row
+    }
+    // Merge header
+    merges.push({ s: { r: currentRow, c: 0 }, e: { r: currentRow, c: 1 } });
+    
+    // Style header
+    const headerCellAddress = XLSX.utils.encode_cell({ r: currentRow, c: 0 });
+    if (!ws[headerCellAddress]) ws[headerCellAddress] = { t: 's', v: '' };
+    ws[headerCellAddress].s = {
+      font: { color: { rgb: "000000" }, bold: true },
+      fill: { fgColor: { rgb: "FFD966" } }, // Light Orange/Yellow
+      alignment: { horizontal: "center", vertical: "center" }
+    };
+    
+    const group = schedule[i];
+    const maxRows = Math.ceil(group.employees.length / 2);
+
+    // Style data cells
+    for(let r = 1; r <= maxRows; r++) {
+        const row = currentRow + r;
+        const cell1Addr = XLSX.utils.encode_cell({r: row, c: 0});
+        const cell2Addr = XLSX.utils.encode_cell({r: row, c: 1});
+
+        if(ws[cell1Addr]) {
+            ws[cell1Addr].s = {
+                fill: { fgColor: { rgb: "DDEBF7" } }, // Light Blue
+                border: {
+                    left: { style: "thin", color: { rgb: "000000" } },
+                    right: { style: "thin", color: { rgb: "000000" } },
+                    top: { style: "thin", color: { rgb: "000000" } },
+                    bottom: { style: "thin", color: { rgb: "000000" } },
+                }
+            }
+        }
+         if(ws[cell2Addr]) {
+            ws[cell2Addr].s = {
+                fill: { fgColor: { rgb: "DDEBF7" } }, // Light Blue
+                 border: {
+                    left: { style: "thin", color: { rgb: "000000" } },
+                    right: { style: "thin", color: { rgb: "000000" } },
+                    top: { style: "thin", color: { rgb: "000000" } },
+                    bottom: { style: "thin", color: { rgb: "000000" } },
+                }
+            }
+        }
+    }
+
+    currentRow += maxRows + 1;
   }
+  
+  ws['!merges'] = merges;
+  ws['!cols'] = [{ wch: 30 }, { wch: 30 }];
 
-  const worksheet = XLSX.utils.json_to_sheet(worksheetData);
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, 'Schedule');
-
-  // Set column widths
-  worksheet['!cols'] = [
-    { wch: 25 }, // Employee Name/ID
-    { wch: 15 }, // Group Number
-    { wch: 20 }, // Break Start Time
-    { wch: 20 }, // Break End Time
-  ];
-
+  XLSX.utils.book_append_sheet(wb, ws, 'Schedule');
   const today = new Date().toISOString().slice(0, 10);
-  XLSX.writeFile(workbook, `AzamRota_Schedule_${today}.xlsx`);
+  XLSX.writeFile(wb, `AzamRota_Schedule_${today}.xlsx`);
 };
