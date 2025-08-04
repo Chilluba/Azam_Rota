@@ -4,6 +4,7 @@ import { Users, Clock, Download, Sun, Moon } from 'lucide-react';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { useLanguage } from '@/lib/i18n';
 import LanguageSwitcher from '@/components/language-switcher';
+import { HowItWorks } from '@/components/how-it-works';
 
 export default function Home() {
   const { t } = useLanguage();
@@ -39,6 +40,9 @@ export default function Home() {
       </header>
 
       <main className="flex-1">
+        <div className="container mx-auto p-4 md:p-8">
+            <HowItWorks />
+        </div>
         <SchedulerPage />
       </main>
 

@@ -133,7 +133,7 @@ export function SchedulerPage() {
   };
 
   return (
-    <div className="container mx-auto p-4 md:p-8">
+    <div className="container mx-auto p-4 md:p-8 pt-0 md:pt-0">
       <form onSubmit={form.handleSubmit(onSubmit)}>
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-start">
           

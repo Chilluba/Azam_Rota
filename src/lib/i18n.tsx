@@ -27,6 +27,26 @@ const translations: Translations = {
     footer: {
         builtToStreamline: 'Built to streamline daily break scheduling with fairness and efficiency.'
     },
+    howItWorks: {
+      title: 'How It Works',
+      description: 'A quick guide to generating your daily schedule.',
+      step1: {
+        title: 'Step 1: Enter Employee Names',
+        description: "In the 'Configuration' panel, list all employee names or IDs in the text area, with each name on a new line."
+      },
+      step2: {
+        title: 'Step 2: Set Groups and Availability',
+        description: "Choose the number of break groups for the day and select any employees who are unavailable from the dropdown list."
+      },
+      step3: {
+        title: 'Step 3: Define Time Slots',
+        description: "Assign a start and end time for each break group. The number of time slots will automatically match the number of groups you selected."
+      },
+      step4: {
+        title: 'Step 4: Generate and Review',
+        description: "Click the 'Generate Daily Rotation' button. The app will automatically create fair and balanced groups for the day. You can manually adjust the groups if needed or export the schedule to Excel."
+      }
+    },
     config: {
         title: 'Configuration',
         description: 'Set up the details for the daily schedule.',
@@ -91,6 +111,26 @@ const translations: Translations = {
     },
     footer: {
         builtToStreamline: 'Imeundwa kurahisisha upangaji wa mapumziko ya kila siku kwa usawa na ufanisi.'
+    },
+    howItWorks: {
+      title: 'Inavyofanya Kazi',
+      description: 'Mwongozo wa haraka wa kuzalisha ratiba yako ya kila siku.',
+      step1: {
+        title: 'Hatua ya 1: Ingiza Majina ya Wafanyakazi',
+        description: "Katika paneli ya 'Usanidi', orodhesha majina yote ya wafanyakazi au vitambulisho katika eneo la maandishi, kila jina likiwa kwenye mstari mpya."
+      },
+      step2: {
+        title: 'Hatua ya 2: Weka Vikundi na Upatikanaji',
+        description: "Chagua idadi ya vikundi vya mapumziko kwa siku na uchague wafanyakazi wowote ambao hawapatikani kutoka kwenye orodha ya kushuka."
+      },
+      step3: {
+        title: 'Hatua ya 3: Bainisha Nafasi za Wakati',
+        description: "Panga muda wa kuanza na kumaliza kwa kila kikundi cha mapumziko. Idadi ya nafasi za wakati italingana kiotomatiki na idadi ya vikundi ulivyochagua."
+      },
+      step4: {
+        title: 'Hatua ya 4: Zalisha na Uhakiki',
+        description: "Bofya kitufe cha 'Zalisha Mzunguko wa Kila Siku'. Programu itaunda vikundi vya haki na usawa kwa siku. Unaweza kurekebisha vikundi mwenyewe ikihitajika au kuhamisha ratiba kwenda Excel."
+      }
     },
     config: {
         title: 'Usanidi',
@@ -157,9 +197,9 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 
   const t: TranslationFunction = (key, values) => {
     const keyParts = key.split('.');
-    let translation = translations[language];
+    let translation: any = translations[language];
     for(const part of keyParts) {
-        if(translation[part]) {
+        if(translation && typeof translation === 'object' && part in translation) {
             translation = translation[part];
         } else {
             return key; // Return key if not found
