@@ -25,7 +25,8 @@ const translations: Translations = {
       excelExport: 'Excel Export',
     },
     footer: {
-        builtToStreamline: 'Built to streamline daily break scheduling with fairness and efficiency.'
+        builtToStreamline: 'Built to streamline daily break scheduling with fairness and efficiency.',
+        createdBy: 'Created by Salmin Habibu'
     },
     howItWorks: {
       title: 'How It Works',
@@ -110,7 +111,8 @@ const translations: Translations = {
       excelExport: 'Hamisha kwenda Excel',
     },
     footer: {
-        builtToStreamline: 'Imeundwa kurahisisha upangaji wa mapumziko ya kila siku kwa usawa na ufanisi.'
+        builtToStreamline: 'Imeundwa kurahisisha upangaji wa mapumziko ya kila siku kwa usawa na ufanisi.',
+        createdBy: 'Imetengenezwa na Salmin Habibu'
     },
     howItWorks: {
       title: 'Inavyofanya Kazi',

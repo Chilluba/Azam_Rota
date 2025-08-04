@@ -51,6 +51,9 @@ export default function Home() {
           <p className="text-center text-sm leading-loose text-muted-foreground">
             {t('footer.builtToStreamline')}
           </p>
+           <p className="text-center text-xs text-muted-foreground">
+            {t('footer.createdBy')}
+          </p>
         </div>
       </footer>
     </div>
