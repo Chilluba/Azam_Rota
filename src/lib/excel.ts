@@ -22,12 +22,14 @@ export const exportToExcel = (schedule: Group[], timeSlots: TimeSlot[], t: Trans
   const wb = XLSX.utils.book_new();
   const ws_data: any[][] = [];
 
-  schedule.forEach((group, index) => {
+  const sortedSchedule = [...schedule].sort((a, b) => a.id - b.id);
+
+  sortedSchedule.forEach((group) => {
     if (ws_data.length > 0) {
       ws_data.push([]); // Add an empty row between groups
     }
     const timeSlot = timeSlots[group.id - 1] || { start: 'N/A', end: 'N/A' };
-    const headerText = `${formatTime(timeSlot.start)} - ${formatTime(timeSlot.end)}`;
+    const headerText = `${t('schedule.group', { id: group.id })}: ${formatTime(timeSlot.start)} - ${formatTime(timeSlot.end)}`;
     ws_data.push([headerText, null]);
 
     const midIndex = Math.ceil(group.employees.length / 2);
@@ -49,7 +51,7 @@ export const exportToExcel = (schedule: Group[], timeSlots: TimeSlot[], t: Trans
   // Styling and Merging
   const merges = [];
   let currentRow = 0;
-  for (let i = 0; i < schedule.length; i++) {
+  for (let i = 0; i < sortedSchedule.length; i++) {
     if (i > 0) {
       currentRow++; // Account for empty row
     }
@@ -60,12 +62,12 @@ export const exportToExcel = (schedule: Group[], timeSlots: TimeSlot[], t: Trans
     const headerCellAddress = XLSX.utils.encode_cell({ r: currentRow, c: 0 });
     if (!ws[headerCellAddress]) ws[headerCellAddress] = { t: 's', v: '' };
     ws[headerCellAddress].s = {
-      font: { color: { rgb: "000000" }, bold: true },
-      fill: { fgColor: { rgb: "FFD966" } }, // Light Orange/Yellow
+      font: { color: { rgb: "FFFFFF" }, bold: true },
+      fill: { fgColor: { rgb: "70A19F" } }, // Primary Teal
       alignment: { horizontal: "center", vertical: "center" }
     };
     
-    const group = schedule[i];
+    const group = sortedSchedule[i];
     const maxRows = Math.ceil(group.employees.length / 2);
 
     // Style data cells
@@ -74,27 +76,22 @@ export const exportToExcel = (schedule: Group[], timeSlots: TimeSlot[], t: Trans
         const cell1Addr = XLSX.utils.encode_cell({r: row, c: 0});
         const cell2Addr = XLSX.utils.encode_cell({r: row, c: 1});
 
+        const cellStyle = {
+            fill: { fgColor: { rgb: "F0F8F7" } }, // Light desaturated teal
+            border: {
+                left: { style: "thin", color: { rgb: "B0C4DE" } }, // Light Steel Blue for subtle borders
+                right: { style: "thin", color: { rgb: "B0C4DE" } },
+                top: { style: "thin", color: { rgb: "B0C4DE" } },
+                bottom: { style: "thin", color: { rgb: "B0C4DE" } },
+            },
+            alignment: { vertical: "center", horizontal: "center"}
+        };
+
         if(ws[cell1Addr]) {
-            ws[cell1Addr].s = {
-                fill: { fgColor: { rgb: "DDEBF7" } }, // Light Blue
-                border: {
-                    left: { style: "thin", color: { rgb: "000000" } },
-                    right: { style: "thin", color: { rgb: "000000" } },
-                    top: { style: "thin", color: { rgb: "000000" } },
-                    bottom: { style: "thin", color: { rgb: "000000" } },
-                }
-            }
+            ws[cell1Addr].s = cellStyle;
         }
          if(ws[cell2Addr]) {
-            ws[cell2Addr].s = {
-                fill: { fgColor: { rgb: "DDEBF7" } }, // Light Blue
-                 border: {
-                    left: { style: "thin", color: { rgb: "000000" } },
-                    right: { style: "thin", color: { rgb: "000000" } },
-                    top: { style: "thin", color: { rgb: "000000" } },
-                    bottom: { style: "thin", color: { rgb: "000000" } },
-                }
-            }
+            ws[cell2Addr].s = cellStyle;
         }
     }
 
@@ -106,5 +103,5 @@ export const exportToExcel = (schedule: Group[], timeSlots: TimeSlot[], t: Trans
 
   XLSX.utils.book_append_sheet(wb, ws, t('excel.sheetName'));
   const today = new Date().toISOString().slice(0, 10);
-  XLSX.writeFile(wb, `AzamRota_Schedule_${today}.xlsx`);
+  XLSX.writeFile(wb, `ShiftCycle_Schedule_${today}.xlsx`);
 };
