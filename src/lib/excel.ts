@@ -103,5 +103,5 @@ export const exportToExcel = (schedule: Group[], timeSlots: TimeSlot[], t: Trans
 
   XLSX.utils.book_append_sheet(wb, ws, t('excel.sheetName'));
   const today = new Date().toISOString().slice(0, 10);
-  XLSX.writeFile(wb, `ShiftCycle_Schedule_${today}.xlsx`);
+  XLSX.writeFile(wb, `Azamrota_${today}.xlsx`);
 };
